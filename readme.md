@@ -129,8 +129,40 @@ r_js -o build.json \
     optimize=none
 ```
 
-**Note 1**: the above is a short version, in the `mv` you'll probably want to check the directory
-exists etc - but I'm not providing a full script here since requirements will differ.
+**Note 1**: the above is a short version
+
+<details>
+  <summary>Example optimizer script, but requirements might differ</summary><p>
+#!/usr/bin/env bash
+path=pub/static/frontend/
+# List all frontend theme locales, excluding the Magento themes
+dirs=`ls -d $path/*/*/*/ | grep -v Magento`
+
+for dir in $dirs
+do
+    locale=$path"/"$dir
+    source=$path"/"$dir"_src"
+    # Rename original theme to _src
+    mv  $locale $source
+    # Run requireJS optimizer script
+    r_js -o build.json \
+        baseUrl=$source \
+        dir=$locale \
+        optimize=none
+
+    if [ $? -eq 0 ];
+    then
+        # Command succesfull, remove _src folder
+        rm -rf $source
+    else
+        # Command failed, restore original theme files
+        rm -rf $locale
+        mv $source $locale
+    fi
+done
+</p>
+</details>
+
 
 **Note 2**: change `optimize=none` to `optimize=uglify` when you've confirmed the bundling is working.
 
